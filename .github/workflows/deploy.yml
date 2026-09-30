@@ -22,25 +22,10 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          set +e
-          {
-            echo "== diagnostics =="
-            echo "TOKEN_LEN=${#CLOUDFLARE_API_TOKEN}"
-            echo "ACCT_LEN=${#CLOUDFLARE_ACCOUNT_ID}"
-            node --version
-            echo "== wrangler version =="
-            npx --yes wrangler@3 --version
-            echo "== whoami =="
-            npx --yes wrangler@3 whoami
-            echo "== deploy =="
-            npx --yes wrangler@3 pages deploy . --project-name=astray-menu --branch=main
-            echo "DEPLOY_EXIT=$?"
-          } > deploy-output.txt 2>&1
-          cat deploy-output.txt
-
-      - name: Upload output
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: deploy-output
-          path: deploy-output.txt
+          # Create the Pages project on first run (ignored if it already exists)
+          npx --yes wrangler@3 pages project create astray-menu \
+            --production-branch=main 2>/dev/null || true
+          # Deploy the repo root to production
+          npx --yes wrangler@3 pages deploy . \
+            --project-name=astray-menu \
+            --branch=main
